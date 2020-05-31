@@ -1,0 +1,273 @@
+From 6139d99073cd598027fed11e50109a77d66442ff Mon Sep 17 00:00:00 2001
+From: Ryan Volz <rvolz@mit.edu>
+Date: Mon, 1 Jun 2020 20:52:37 -0400
+Subject: [PATCH 2/3] M_PI -> GR_M_PI to match gnuradio and have MSVC
+ compatibility.
+
+---
+ lib/estimator_fsk_impl.cc              |  5 +++--
+ lib/estimator_rcs_impl.cc              |  9 +++++----
+ lib/signal_generator_cw_c_impl.cc      |  5 +++--
+ lib/signal_generator_fmcw_c_impl.cc    |  5 +++--
+ lib/signal_generator_fsk_c_impl.cc     |  9 +++++----
+ lib/static_target_simulator_cc_impl.cc | 17 +++++++++--------
+ lib/tracking_singletarget_impl.cc      |  7 ++++---
+ 7 files changed, 32 insertions(+), 25 deletions(-)
+
+diff --git a/lib/estimator_fsk_impl.cc b/lib/estimator_fsk_impl.cc
+index a460fa9..77b451e 100644
+--- a/lib/estimator_fsk_impl.cc
++++ b/lib/estimator_fsk_impl.cc
+@@ -24,6 +24,7 @@
+ 
+ #include "estimator_fsk_impl.h"
+ #include <gnuradio/io_signature.h>
++#include <gnuradio/math.h>
+ 
+ namespace gr {
+ namespace radar {
+@@ -99,10 +100,10 @@ void estimator_fsk_impl::handle_msg(pmt::pmt_t msg)
+     d_range.clear();
+     for (int k = 0; k < d_phase.size(); k++) {
+         if (d_phase[k] >= 0)
+-            d_range.push_back((d_phase[k]) * c_light / 4 / M_PI /
++            d_range.push_back((d_phase[k]) * c_light / 4 / GR_M_PI /
+                               d_delta_freq); // calc with fsk range formula
+         else if (d_phase[k] < 0)
+-            d_range.push_back((2 * M_PI + d_phase[k]) * c_light / 4 / M_PI /
++            d_range.push_back((2 * GR_M_PI + d_phase[k]) * c_light / 4 / GR_M_PI /
+                               d_delta_freq); // phase jumps from pi to -pi
+     }
+ 
+diff --git a/lib/estimator_rcs_impl.cc b/lib/estimator_rcs_impl.cc
+index d8d53c4..89af76f 100644
+--- a/lib/estimator_rcs_impl.cc
++++ b/lib/estimator_rcs_impl.cc
+@@ -23,6 +23,7 @@
+ #endif
+ 
+ #include <gnuradio/io_signature.h>
++#include <gnuradio/math.h>
+ #include <boost/circular_buffer.hpp>
+ #include "estimator_rcs_impl.h"
+ #include <numeric>
+@@ -90,7 +91,7 @@ estimator_rcs_impl::estimator_rcs_impl(int num_mean,
+     d_antenna_gain_abs_rx = pow(10, d_antenna_gain_rx / 10);
+     d_antenna_gain_abs_tx = pow(10, d_antenna_gain_tx / 10);
+     d_lambda = c_light / d_center_freq;
+-    d_fak = pow(4.0 * M_PI, 3) /
++    d_fak = pow(4.0 * GR_M_PI, 3) /
+             (d_antenna_gain_abs_rx * d_antenna_gain_abs_tx * pow(d_lambda, 2));
+ }
+ 
+@@ -111,7 +112,7 @@ void estimator_rcs_impl::set_center_freq(float val)
+ {
+     d_center_freq = val;
+     d_lambda = c_light / d_center_freq;
+-    d_fak = pow(4.0 * M_PI, 3) /
++    d_fak = pow(4.0 * GR_M_PI, 3) /
+             (d_antenna_gain_abs_rx * d_antenna_gain_abs_tx * pow(d_lambda, 2));
+ }
+ 
+@@ -119,7 +120,7 @@ void estimator_rcs_impl::set_antenna_gain_tx(float val)
+ {
+     d_antenna_gain_tx = val;
+     d_antenna_gain_abs_tx = pow(10, d_antenna_gain_tx / 10);
+-    d_fak = pow(4.0 * M_PI, 3) /
++    d_fak = pow(4.0 * GR_M_PI, 3) /
+             (d_antenna_gain_abs_rx * d_antenna_gain_abs_tx * pow(d_lambda, 2));
+ }
+ 
+@@ -127,7 +128,7 @@ void estimator_rcs_impl::set_antenna_gain_rx(float val)
+ {
+     d_antenna_gain_rx = val;
+     d_antenna_gain_abs_rx = pow(10, d_antenna_gain_rx / 10);
+-    d_fak = pow(4.0 * M_PI, 3) /
++    d_fak = pow(4.0 * GR_M_PI, 3) /
+             (d_antenna_gain_abs_rx * d_antenna_gain_abs_tx * pow(d_lambda, 2));
+ }
+ 
+diff --git a/lib/signal_generator_cw_c_impl.cc b/lib/signal_generator_cw_c_impl.cc
+index 407e715..d9121f4 100644
+--- a/lib/signal_generator_cw_c_impl.cc
++++ b/lib/signal_generator_cw_c_impl.cc
+@@ -24,6 +24,7 @@
+ 
+ #include "signal_generator_cw_c_impl.h"
+ #include <gnuradio/io_signature.h>
++#include <gnuradio/math.h>
+ 
+ namespace gr {
+ namespace radar {
+@@ -86,9 +87,9 @@ int signal_generator_cw_c_impl::work(int noutput_items,
+         for (int k = 0; k < d_num_freq; k++) { // Go through frequencies
+             out[i] += d_amplitude / (float)d_num_freq *
+                       exp(d_phase[k]); // output amplitude is normed on d_amplitude
+-            d_phase[k] = 1j * std::fmod(imag(d_phase[k]) + 2 * M_PI * d_frequency[k] /
++            d_phase[k] = 1j * std::fmod(imag(d_phase[k]) + 2 * GR_M_PI * d_frequency[k] /
+                                                                (float)d_samp_rate,
+-                                        2 * M_PI);
++                                        2 * GR_M_PI);
+         }
+     }
+ 
+diff --git a/lib/signal_generator_fmcw_c_impl.cc b/lib/signal_generator_fmcw_c_impl.cc
+index b0ac400..99e601a 100644
+--- a/lib/signal_generator_fmcw_c_impl.cc
++++ b/lib/signal_generator_fmcw_c_impl.cc
+@@ -24,6 +24,7 @@
+ 
+ #include "signal_generator_fmcw_c_impl.h"
+ #include <gnuradio/io_signature.h>
++#include <gnuradio/math.h>
+ 
+ namespace gr {
+ namespace radar {
+@@ -96,9 +97,9 @@ int signal_generator_fmcw_c_impl::work(int noutput_items,
+ 
+         // Write sample
+         *out++ = d_amplitude * exp(d_phase);
+-        d_phase = 1j * std::fmod(imag(d_phase) + 2 * M_PI * d_waveform[d_wv_counter] /
++        d_phase = 1j * std::fmod(imag(d_phase) + 2 * GR_M_PI * d_waveform[d_wv_counter] /
+                                                      (float)d_samp_rate,
+-                                 2 * M_PI);
++                                 2 * GR_M_PI);
+         d_wv_counter++;
+     }
+ 
+diff --git a/lib/signal_generator_fsk_c_impl.cc b/lib/signal_generator_fsk_c_impl.cc
+index a5a4864..debdaea 100644
+--- a/lib/signal_generator_fsk_c_impl.cc
++++ b/lib/signal_generator_fsk_c_impl.cc
+@@ -24,6 +24,7 @@
+ 
+ #include "signal_generator_fsk_c_impl.h"
+ #include <gnuradio/io_signature.h>
++#include <gnuradio/math.h>
+ 
+ namespace gr {
+ namespace radar {
+@@ -109,11 +110,11 @@ int signal_generator_fsk_c_impl::work(int noutput_items,
+             out[i] = d_amplitude * exp(d_phase_low); // start with low_freq (state=0)
+ 
+         d_phase_low =
+-            1j * std::fmod(imag(d_phase_low) + 2 * M_PI * d_freq_low / (float)d_samp_rate,
+-                           2 * M_PI);
++            1j * std::fmod(imag(d_phase_low) + 2 * GR_M_PI * d_freq_low / (float)d_samp_rate,
++                           2 * GR_M_PI);
+         d_phase_high = 1j * std::fmod(imag(d_phase_high) +
+-                                          2 * M_PI * d_freq_high / (float)d_samp_rate,
+-                                      2 * M_PI);
++                                          2 * GR_M_PI * d_freq_high / (float)d_samp_rate,
++                                      2 * GR_M_PI);
+     }
+ 
+     // Tell runtime system how many output items we produced.
+diff --git a/lib/static_target_simulator_cc_impl.cc b/lib/static_target_simulator_cc_impl.cc
+index 8b6c952..44fe2f9 100644
+--- a/lib/static_target_simulator_cc_impl.cc
++++ b/lib/static_target_simulator_cc_impl.cc
+@@ -24,6 +24,7 @@
+ 
+ #include "static_target_simulator_cc_impl.h"
+ #include <gnuradio/io_signature.h>
++#include <gnuradio/math.h>
+ #include <volk/volk.h>
+ 
+ namespace gr {
+@@ -141,7 +142,7 @@ void static_target_simulator_cc_impl::setup_targets(std::vector<float> range,
+         d_timeshift_azimuth[l].resize(d_num_targets);
+         for (int k = 0; k < d_num_targets; k++) {
+             d_timeshift_azimuth[l][k] =
+-                d_position_rx[l] * std::sin(d_azimuth[k] * M_PI / 180.0);
++                d_position_rx[l] * std::sin(d_azimuth[k] * GR_M_PI / 180.0);
+         }
+     }
+     for (int k = 0; k < d_num_targets; k++)
+@@ -224,8 +225,8 @@ int static_target_simulator_cc_impl::work(int noutput_items,
+                 d_filt_doppler[k][i] = std::exp(d_phase_doppler) * d_scale_ampl[k];
+                 d_phase_doppler =
+                     1j * std::fmod(std::imag(d_phase_doppler) +
+-                                       2 * M_PI * d_doppler[k] / (float)d_samp_rate,
+-                                   2 * M_PI); // integrate phase (with plus!)
++                                       2 * GR_M_PI * d_doppler[k] / (float)d_samp_rate,
++                                   2 * GR_M_PI); // integrate phase (with plus!)
+             }
+ 
+             d_filt_time[k].resize(noutput_items);
+@@ -233,9 +234,9 @@ int static_target_simulator_cc_impl::work(int noutput_items,
+             for (int i = 0; i < noutput_items; i++) {
+                 // Time shift filter, uses target range
+                 d_phase_time =
+-                    1j * std::fmod(2 * M_PI * (d_timeshift[k]) // range time shift
++                    1j * std::fmod(2 * GR_M_PI * (d_timeshift[k]) // range time shift
+                                        * d_freq[i],
+-                                   2 * M_PI); // integrate phase (with minus!)
++                                   2 * GR_M_PI); // integrate phase (with minus!)
+                 d_filt_time[k][i] =
+                     std::exp(-d_phase_time) /
+                     (float)noutput_items; // div with noutput_item to correct amplitude
+@@ -252,10 +253,10 @@ int static_target_simulator_cc_impl::work(int noutput_items,
+                     // Time shift filter, uses azimuth and RX position
+                     d_phase_time =
+                         1j *
+-                        std::fmod(2 * M_PI *
++                        std::fmod(2 * GR_M_PI *
+                                       (d_timeshift_azimuth[l][k]) // azimuth time shift
+                                       * d_freq[i],
+-                                  2 * M_PI); // integrate phase (with minus!)
++                                  2 * GR_M_PI); // integrate phase (with minus!)
+                     d_filt_time_azimuth[l][k][i] =
+                         std::exp(-d_phase_time); // do not div with noutput_items, is done
+                                                  // with range timeshift filter
+@@ -271,7 +272,7 @@ int static_target_simulator_cc_impl::work(int noutput_items,
+     if (d_rndm_phaseshift) {
+         gr_complex phase_random_hold;
+         for (int k = 0; k < d_num_targets; k++) {
+-            phase_random_hold = 1j * 2 * M_PI * float((std::rand() % 1000 + 1) / 1000.0);
++            phase_random_hold = 1j * 2 * GR_M_PI * float((std::rand() % 1000 + 1) / 1000.0);
+             d_phase_random = std::exp(phase_random_hold);
+             std::fill_n(&d_filt_phase[k][0], noutput_items, d_phase_random);
+         }
+diff --git a/lib/tracking_singletarget_impl.cc b/lib/tracking_singletarget_impl.cc
+index fd800e9..59a5c37 100644
+--- a/lib/tracking_singletarget_impl.cc
++++ b/lib/tracking_singletarget_impl.cc
+@@ -24,6 +24,7 @@
+ 
+ #include "tracking_singletarget_impl.h"
+ #include <gnuradio/io_signature.h>
++#include <gnuradio/math.h>
+ #include <time.h>
+ 
+ namespace gr {
+@@ -202,7 +203,7 @@ float tracking_singletarget_impl::random_normal(float mean, float std)
+     int num_range = 1000000;
+     float v1 = (rand() % num_range) / (float)num_range;
+     float v2 = (rand() % num_range) / (float)num_range;
+-    return mean + std * std::sqrt(-2 * std::log(v1)) * std::cos(2 * M_PI * v2);
++    return mean + std * std::sqrt(-2 * std::log(v1)) * std::cos(2 * GR_M_PI * v2);
+ }
+ 
+ void // begin kalman-filter
+@@ -260,7 +261,7 @@ tracking_singletarget_impl::filter_particle()
+         velocity_dif = d_velocity_meas - d_particle_velocity[k];
+         lh = std::exp(-0.5 * (range_dif * range_dif * R_inv[0][0] +
+                               velocity_dif * velocity_dif * R_inv[1][1])) /
+-             2 / M_PI / std::sqrt(R_det); // get likelihood
++             2 / GR_M_PI / std::sqrt(R_det); // get likelihood
+         d_particle_weight[k] = d_particle_weight[k] * lh;
+         // calc sum of weights and sum of weight square
+         sum_weight = sum_weight + d_particle_weight[k];
+@@ -336,7 +337,7 @@ bool tracking_singletarget_impl::tracking()
+             velocity_dif = d_velocity_meas - d_velocity_est;
+             float lh = std::exp(-0.5 * (range_dif * range_dif * R_inv[0][0] +
+                                         velocity_dif * velocity_dif * R_inv[1][1])) /
+-                       2 / M_PI / std::sqrt(R_det); // calc likelihood
++                       2 / GR_M_PI / std::sqrt(R_det); // calc likelihood
+ 
+             if (d_threshold_track < lh) { // if new sample is accepted as track
+                 if (d_filter == "particle")
+-- 
+2.20.1
+

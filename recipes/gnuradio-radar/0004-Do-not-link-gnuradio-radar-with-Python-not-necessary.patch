@@ -1,0 +1,27 @@
+From fbda425a4287b45a4ef99d50ec37fc06c08f16ff Mon Sep 17 00:00:00 2001
+From: Ryan Volz <rvolz@mit.edu>
+Date: Mon, 8 Jun 2020 10:59:18 -0400
+Subject: [PATCH 4/4] Do not link gnuradio-radar with Python (not necessary,
+ avoid segfault).
+
+---
+ lib/CMakeLists.txt | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/lib/CMakeLists.txt b/lib/CMakeLists.txt
+index 73fcf21..d85b559 100644
+--- a/lib/CMakeLists.txt
++++ b/lib/CMakeLists.txt
+@@ -77,7 +77,8 @@ endif(NOT radar_sources)
+ 
+ add_library(gnuradio-radar SHARED ${radar_sources})
+ target_link_libraries(gnuradio-radar PUBLIC
+-  gnuradio::gnuradio-runtime ${QT_LIBRARIES} fftw3f::fftw3f UHD::UHD qwt::qwt Python::Python)
++  gnuradio::gnuradio-runtime ${QT_LIBRARIES} fftw3f::fftw3f UHD::UHD qwt::qwt
++)
+ target_include_directories(gnuradio-radar
+     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+     PUBLIC $<INSTALL_INTERFACE:include>
+-- 
+2.20.1
+
