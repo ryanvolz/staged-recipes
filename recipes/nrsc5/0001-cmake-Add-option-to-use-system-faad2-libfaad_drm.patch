@@ -1,0 +1,38 @@
+From cac9d853784a6a48a8897cab8d394f87d61c0721 Mon Sep 17 00:00:00 2001
+From: Ryan Volz <ryan.volz@gmail.com>
+Date: Tue, 18 Aug 2020 15:45:34 -0400
+Subject: [PATCH] cmake: Add option to use system faad2 (libfaad_drm).
+
+---
+ CMakeLists.txt | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 653c145..d6b9922 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -11,6 +11,7 @@ option (USE_NEON "Use NEON instructions")
+ option (USE_SSE "Use SSE3 instructions")
+ option (USE_FAAD2 "AAC decoding with FAAD2" ON)
+ option (USE_STATIC "Link with static libraries")
++option (USE_SYSTEM_FAAD2 "Use system provided faad2" OFF)
+ option (USE_SYSTEM_FFTW "Use system provided fftw" ON)
+ option (USE_SYSTEM_RTLSDR "Use system provided rtl-sdr" ON)
+ option (USE_SYSTEM_LIBUSB "Use system provided libusb" ON)
+@@ -211,7 +212,12 @@ if (NOT USE_SYSTEM_LIBAO)
+     set (AO_BUILTIN libao)
+ endif ()
+ 
+-if (USE_FAAD2)
++if (USE_SYSTEM_FAAD2)
++    pkg_search_module (FAAD2 REQUIRED faad2)
++    # use DRM variant (built with HDC support) of library instead
++    set (FAAD2_LIBRARIES faad_drm)
++    add_definitions (-DHAVE_FAAD2)
++elseif (USE_FAAD2)
+     set (FAAD2_PREFIX "${CMAKE_BINARY_DIR}/faad2-prefix")
+     ExternalProject_Add (
+         faad2_external
+-- 
+2.20.1
+

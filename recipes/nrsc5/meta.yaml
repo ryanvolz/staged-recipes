@@ -1,0 +1,62 @@
+{% set name = "nrsc5" %}
+{% set version = "1.0.20200811" %}
+{% set commit = "84e9257df915dbf47b4897d6a181a61e887861a3" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://github.com/theori-io/{{ name }}/archive/{{ commit }}.zip
+  sha256: a941ab4199da5a58088979887b78b75762711837c9db56f60d5c39e034946499
+  patches:
+    - 0001-cmake-Add-option-to-use-system-faad2-libfaad_drm.patch
+
+build:
+  number: 0
+  run_exports:
+    - {{ pin_subpackage('nrsc5', max_pin='x.x') }}
+
+requirements:
+  build:
+    - {{ compiler('c') }}  # [not win]
+    - cmake
+    - {{ cdt('libudev') }}  # [linux]
+    - make  # [not win]
+    - ninja  # [win]
+  host:
+    - faad2
+    - fftw
+    - libao
+    - rtl-sdr
+
+test:
+  commands:
+    # verify that executables can be run
+    - nrsc5 -v
+
+    # verify that headers get installed
+    - test -f $PREFIX/include/nrsc5.h  # [not win]
+    - if not exist %PREFIX%\\Library\\include\\nrsc5.h exit 1  # [win]
+
+    # verify that libraries get installed
+    - test -f $PREFIX/lib/libnrsc5${SHLIB_EXT}  # [not win]
+    - if not exist %PREFIX%\\Library\\bin\\libnrsc5.dll exit 1  # [win]
+    - if not exist %PREFIX%\\Library\\lib\\libnrsc5.dll.a exit 1  # [win]
+    - if not exist %PREFIX%\\Library\\lib\\libnrsc5.lib exit 1  # [win]
+
+about:
+  home: https://github.com/theori-io/nrsc5
+  license: GPL-3.0-or-later
+  license_family: GPL
+  license_file: LICENSE
+  summary: 'NRSC-5 receiver for rtl-sdr '
+  description: |
+    This program receives NRSC-5 digital radio stations using an RTL-SDR dongle.
+    It offers a command-line interface as well as an API upon which other
+    applications can be built.
+  dev_url: https://github.com/theori-io/nrsc5
+
+extra:
+  recipe-maintainers:
+    - ryanvolz
