@@ -1,0 +1,58 @@
+{% set name = "faad2" %}
+{% set version = "2.9.2" %}
+{% set tag = version.replace(".", "_") %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://github.com/knik0/{{ name }}/archive/{{ tag }}.tar.gz
+  sha256: 9728b2b94f94ab49363cd229e7377fbe6ef3c311c5cd80da662d53ddb0ee091d
+  patches:
+    - 0001-Support-for-HDC-variant.patch
+
+build:
+  number: 0
+  run_exports:
+    - {{ pin_subpackage('faad2', max_pin='x') }}
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - make  # [not win]
+
+test:
+  commands:
+    # verify that executable can be run
+    - faad --help || ec=$?; if [ $ec -gt 1 ]; then exit $ec; fi  # [not win]
+    - faad --help || if !ERRORLEVEL! LEQ 1 cmd /c "exit /b 0"  # [win]
+
+    # verify that headers get installed
+    - test -f $PREFIX/include/faad.h  # [not win]
+    - test -f $PREFIX/include/neaacdec.h  # [not win]
+    - if not exist %PREFIX%\\Library\\include\\faad.h exit 1  # [win]
+    - if not exist %PREFIX%\\Library\\include\\neaacdec.h exit 1  # [win]
+
+    # verify that libraries get installed
+    - test -f $PREFIX/lib/libfaad${SHLIB_EXT}  # [not win]
+    - test -f $PREFIX/lib/libfaad_drm${SHLIB_EXT}  # [not win]
+    - if not exist %PREFIX%\\Library\\bin\\faad.dll exit 1  # [win]
+    - if not exist %PREFIX%\\Library\\bin\\faad_drm.dll exit 1  # [win]
+    - if not exist %PREFIX%\\Library\\lib\\faad.lib exit 1  # [win]
+    - if not exist %PREFIX%\\Library\\lib\\faad_drm.lib exit 1  # [win]
+
+about:
+  home: https://github.com/knik0/faad2
+  license: GPL-2.0-or-later
+  license_family: GPL
+  license_file: COPYING
+  summary: 'Freeware Advanced Audio (AAC) Decoder'
+  description: |
+    FAAD2 is a HE, LC, MAIN and LTP profile, MPEG2 and MPEG-4 AAC decoder.
+    FAAD2 includes code for SBR (HE AAC) decoding.
+  dev_url: https://github.com/knik0/faad2
+
+extra:
+  recipe-maintainers:
+    - ryanvolz
